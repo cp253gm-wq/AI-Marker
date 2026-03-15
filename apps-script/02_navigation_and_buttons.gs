@@ -82,6 +82,7 @@ function markStudentAtRow(row, mode) {
     "Marking System"
   );
 
+  // Temporary behaviour until Gemini is added
   modeCell.setValue(mode);
   timestampCell.setValue(new Date());
 

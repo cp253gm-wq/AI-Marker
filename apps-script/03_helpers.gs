@@ -14,22 +14,21 @@ function clearStatusCell() {
   }
 }
 
-function createAutoTrigger() { 
-  deleteAutoTrigger(); 
-  ScriptApp.newTrigger('exportSheetsToPDF').timeBased().after(60000).create(); 
+function createAutoTrigger() {
+  deleteAutoTrigger();
+  ScriptApp.newTrigger("exportSheetsToPDF").timeBased().after(60000).create();
 }
 
-function deleteAutoTrigger() { 
+function deleteAutoTrigger() {
   const triggers = ScriptApp.getProjectTriggers();
   for (let i = 0; i < triggers.length; i++) {
-    if (triggers[i].getHandlerFunction() === 'exportSheetsToPDF') {
+    if (triggers[i].getHandlerFunction() === "exportSheetsToPDF") {
       ScriptApp.deleteTrigger(triggers[i]);
     }
   }
 }
 
 function resizeSingleRowAndCentreButtons(row) {
-
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Marking");
   const minHeight = 60;
 
@@ -44,5 +43,4 @@ function resizeSingleRowAndCentreButtons(row) {
   if (currentHeight < minHeight) {
     sheet.setRowHeight(row, minHeight);
   }
-
 }
