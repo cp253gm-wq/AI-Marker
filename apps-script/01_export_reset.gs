@@ -220,3 +220,4 @@ function resetWorkbookData() {
   clearStatusCell();
   deleteAutoTrigger();
   ss.toast("Workbook data successfully cleared.", "Success");
+  }

@@ -27,3 +27,22 @@ function deleteAutoTrigger() {
     }
   }
 }
+
+function resizeSingleRowAndCentreButtons(row) {
+
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Marking");
+  const minHeight = 60;
+
+  if (row < 14 || row > 43) return;
+
+  // Resize only the row that just received feedback
+  sheet.autoResizeRows(row, 1);
+
+  // Enforce minimum height so the layout stays consistent
+  const currentHeight = sheet.getRowHeight(row);
+
+  if (currentHeight < minHeight) {
+    sheet.setRowHeight(row, minHeight);
+  }
+
+}

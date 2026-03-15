@@ -19,22 +19,52 @@ function linkStudentNamesToReports() {
       continue;
     }
 
-    function markStudentAtRow(row, mode) {
+    let targetSheet = null;
 
+    for (let i = 0; i < allSheets.length; i++) {
+      const sheet = allSheets[i];
+      if (excludedSheets.includes(sheet.getName())) continue;
+
+      const a1Value = sheet.getRange("A1").getValue().toString().trim();
+      if (a1Value === studentNumber) {
+        targetSheet = sheet;
+        break;
+      }
+    }
+
+    if (!targetSheet) {
+      nameCell.setRichTextValue(
+        SpreadsheetApp.newRichTextValue().setText(studentName).build()
+      );
+      continue;
+    }
+
+    const gid = targetSheet.getSheetId();
+    const link = ss.getUrl() + `#gid=${gid}&range=R1`;
+
+    const richText = SpreadsheetApp.newRichTextValue()
+      .setText(studentName)
+      .setLinkUrl(link)
+      .build();
+
+    nameCell.setRichTextValue(richText);
+  }
+}
+
+function markStudentAtRow(row, mode) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("Marking");
 
-  const studentName = sheet.getRange(row, 3).getValue().toString().trim();   // Column C
-  const modeCell = sheet.getRange(row, 8);                                    // Column H
-  const timestampCell = sheet.getRange(row, 16);                              // Column P
+  const studentName = sheet.getRange(row, 3).getValue().toString().trim(); // Column C
+  const modeCell = sheet.getRange(row, 8); // Column H
+  const timestampCell = sheet.getRange(row, 16); // Column P
 
   if (!studentName) {
     SpreadsheetApp.getUi().alert("No student name in this row.");
     return;
   }
 
-  // Check whether any actual marking data already exists
-  const existingData = sheet.getRange(row, 24, 1, 171 - 24 + 1).getValues()[0];
+  const existingData = sheet.getRange(`X${row}:FR${row}`).getValues()[0];
   const hasExistingMarking = existingData.some(value => value !== "");
 
   if (hasExistingMarking) {
@@ -47,21 +77,15 @@ function linkStudentNamesToReports() {
     if (overwrite !== SpreadsheetApp.getUi().Button.YES) return;
   }
 
-  // Temporary behaviour until Gemini is added
-  modeCell.setValue(mode);
-  timestampCell.setValue(new Date());
-
   SpreadsheetApp.getActive().toast(
     "Marking started for " + studentName,
     "Marking System"
   );
-  SpreadsheetApp.getActive().toast(
-  "Marking started for " + studentName,
-  "Marking System"
-);
 
-resizeSingleRowAndCentreButtons(row);
+  modeCell.setValue(mode);
+  timestampCell.setValue(new Date());
 
+  resizeSingleRowAndCentreButtons(row);
 }
 
 function markRow14() { markStudentAtRow(14, "Standard"); }
