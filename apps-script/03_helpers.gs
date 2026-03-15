@@ -6,6 +6,14 @@ function extractDriveFolderId_(url) {
   return match[0];
 }
 
+function extractDriveFileId_(url) {
+  const match = url.match(/[-\w]{25,}/);
+  if (!match) {
+    throw new Error("Could not extract a Google Drive file ID from the link provided.");
+  }
+  return match[0];
+}
+
 function clearStatusCell() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const overviewSheet = ss.getSheetByName("Overview");
