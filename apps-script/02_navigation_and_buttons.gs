@@ -56,8 +56,6 @@ function markStudentAtRow(row, mode) {
   const sheet = ss.getSheetByName("Marking");
 
   const studentName = sheet.getRange(row, 3).getValue().toString().trim(); // Column C
-  const modeCell = sheet.getRange(row, 8); // Column H
-  const timestampCell = sheet.getRange(row, 16); // Column P
 
   if (!studentName) {
     SpreadsheetApp.getUi().alert("No student name in this row.");
@@ -82,10 +80,8 @@ function markStudentAtRow(row, mode) {
     "Marking System"
   );
 
-  // Temporary behaviour until Gemini is added
-  modeCell.setValue(mode);
-  timestampCell.setValue(new Date());
-
+  markStudentPass1(row, mode);
+  markStudentPass2(row);
   resizeSingleRowAndCentreButtons(row);
 }
 
