@@ -49,6 +49,23 @@ function buildPass2Prompt_(studentName, studentNumber, mode, pass1Results) {
     ].join("\n");
   }).join("\n\n");
 
+  const workedSolutionExample = [
+    "Worked solution example:",
+    "2x - 3 = -(2/3)x + 5",
+    "",
+    "2x + (2/3)x = 5 + 3",
+    "",
+    "(8/3)x = 8",
+    "",
+    "x = 3",
+    "",
+    "y = 2(3) - 3",
+    "",
+    "y = 3",
+    "",
+    "Solution: (3, 3)"
+  ].join("\n");
+
   return [
     "You are performing Pass 2 of a maths marking workflow using the supplied student paper and answer key PDFs.",
     `Student name: ${studentName}`,
@@ -78,11 +95,18 @@ function buildPass2Prompt_(studentName, studentNumber, mode, pass1Results) {
     "1. Return only mathematical working, with no explanatory sentences.",
     "2. Put each algebraic step on a new line.",
     "3. Put one blank line between steps.",
-    "4. Use clean mathematical notation such as √, ×, ÷, powers, and bracketed fractions where appropriate.",
-    "5. Stop when the final answer is reached.",
-    "6. If full marks were awarded for a question, working must be an empty string.",
-    "7. If no worked solution is needed, working may be an empty string.",
-    "8. Do not use bullets, markdown, or LaTeX delimiters.",
+    "4. Each line must contain exactly one mathematical step only.",
+    "5. No two steps may appear on the same line.",
+    "6. Do not compress multiple equations into one long line.",
+    "7. Do not write prose such as First, Then, Therefore, So, or Because.",
+    "8. Use clean mathematical notation such as √, ×, ÷, powers, and bracketed fractions where appropriate.",
+    "9. The final answer must be on its own final line.",
+    "10. Stop when the final answer is reached.",
+    "11. If full marks were awarded for a question, working must be an empty string.",
+    "12. If no worked solution is needed, working may be an empty string.",
+    "13. Do not use bullets, markdown, or LaTeX delimiters.",
+    "",
+    workedSolutionExample,
     "",
     "Questions with Pass 1 context:",
     questionLines,
@@ -137,6 +161,23 @@ function buildPass2ResponseSchema_(questions) {
   };
 }
 
+function normalizePass2Working_(workingText) {
+  let normalized = String(workingText || "").replace(/\r\n?/g, "\n").trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  normalized = normalized.replace(/([^\n])\s*(Solution:)/g, "$1\n\n$2");
+  normalized = normalized.replace(/([0-9A-Za-z\)])([A-Za-z]\s*=)/g, "$1\n\n$2");
+  normalized = normalized.replace(
+    /([0-9A-Za-z\)])((?:-?\d+(?:\.\d+)?|[A-Za-z(√][^\n=]{0,40}[+\-−×÷\/][^\n=]{0,40}=))/g,
+    "$1\n\n$2"
+  );
+
+  return normalized;
+}
+
 function parseGeminiPass2Response_(responseText, pass1Results) {
   let parsed;
 
@@ -189,18 +230,19 @@ function parseGeminiPass2Response_(responseText, pass1Results) {
 
     const feedback = item.feedback.trim();
     const working = String(item.working || "");
+    const normalizedWorking = normalizePass2Working_(working);
 
     if (!feedback) {
       throw new Error(`Gemini returned blank feedback for ${questionKey}.`);
     }
 
-    if (pass1Result.full_marks_awarded && working !== "") {
+    if (pass1Result.full_marks_awarded && normalizedWorking !== "") {
       throw new Error(`Gemini returned worked solution text for full-mark question ${questionKey}.`);
     }
 
     resultMap[questionKey] = {
       feedback: feedback,
-      working: working
+      working: normalizedWorking
     };
   }
 
