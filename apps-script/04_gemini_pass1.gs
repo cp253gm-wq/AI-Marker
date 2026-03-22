@@ -190,6 +190,10 @@ function buildPass1Prompt_(studentName, studentNumber, mode, questions) {
     return `${question.question} (max ${question.max_mark})`;
   }).join("\n");
 
+  const markingModeInstruction = mode === "Compassionate"
+    ? "Compassionate mode must still be evidence-based, but be slightly more generous on borderline cases where visible mathematical understanding deserves credit."
+    : "Standard mode must still award fair partial credit whenever visible evidence justifies it.";
+
   return [
     "You are marking a student's paper against the supplied answer key.",
     `Student name: ${studentName}`,
@@ -201,9 +205,15 @@ function buildPass1Prompt_(studentName, studentNumber, mode, questions) {
     "Do not include polished general feedback.",
     "Do not include worked solutions.",
     "Use the answer key as the marking reference.",
-    mode === "Compassionate"
-      ? "Use compassionate wording in your internal evaluation, but still return the most defensible numeric mark based on evidence in the paper."
-      : "Use standard marking wording and award the most defensible numeric mark based on evidence in the paper.",
+    markingModeInstruction,
+    "",
+    "Partial credit rules:",
+    "1. Half marks such as 0.5 are allowed when justified by visible evidence.",
+    "2. Half marks are not reserved only for Compassionate mode.",
+    "3. In Standard mode, award fair partial credit for partially correct method, correct mathematical setup with an arithmetic slip, valid intermediate reasoning that deserves some credit, and partially completed but mathematically meaningful progress.",
+    "4. In Compassionate mode, stay evidence-based but be slightly more generous on borderline cases.",
+    "5. Avoid binary all-or-nothing marking when visible partial credit is deserved.",
+    "6. Award the most defensible numeric mark supported by the student's actual work.",
     "",
     "Questions and maximum marks:",
     questionLines,
@@ -214,8 +224,9 @@ function buildPass1Prompt_(studentName, studentNumber, mode, questions) {
     "3. question must match one of the provided question labels exactly.",
     "4. mark must be a JSON number, not a string.",
     "5. evidence_note must be short and evidence-based.",
-    "6. Do not use formats such as 1/2 or 2 out of 3.",
-    "7. Keep marks within the maximum available for each question."
+    "6. Marks such as 0.5 are valid when justified by evidence.",
+    "7. Do not use formats such as 1/2 or 2 out of 3.",
+    "8. Keep marks within the maximum available for each question."
   ].join("\n");
 }
 
