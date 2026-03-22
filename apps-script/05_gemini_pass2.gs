@@ -39,6 +39,7 @@ function getPass1ResultsForRow_(sheet, row, questions) {
 }
 
 function buildPass2Prompt_(studentName, studentNumber, mode, pass1Results) {
+  const firstName = String(studentName || "").trim().split(/\s+/)[0] || studentName;
   const questionLines = pass1Results.map(function(result) {
     return [
       `Question: ${result.question}`,
@@ -49,8 +50,17 @@ function buildPass2Prompt_(studentName, studentNumber, mode, pass1Results) {
     ].join("\n");
   }).join("\n\n");
 
-  const workedSolutionExample = [
-    "Worked solution example:",
+  const workedSolutionExampleShort = [
+    "Worked solution example 1:",
+    "x + 3 = 7",
+    "",
+    "x = 4",
+    "",
+    "Solution: x = 4"
+  ].join("\n");
+
+  const workedSolutionExampleMedium = [
+    "Worked solution example 2:",
     "2x - 3 = -(2/3)x + 5",
     "",
     "2x + (2/3)x = 5 + 3",
@@ -66,6 +76,23 @@ function buildPass2Prompt_(studentName, studentNumber, mode, pass1Results) {
     "Solution: (3, 3)"
   ].join("\n");
 
+  const workedSolutionExampleSystem = [
+    "Worked solution example 3:",
+    "x + y = 10",
+    "",
+    "y = 10 - x",
+    "",
+    "2x + (10 - x) = 13",
+    "",
+    "x + 10 = 13",
+    "",
+    "x = 3",
+    "",
+    "y = 7",
+    "",
+    "Solution: (3, 7)"
+  ].join("\n");
+
   return [
     "You are performing Pass 2 of a maths marking workflow using the supplied student paper and answer key PDFs.",
     `Student name: ${studentName}`,
@@ -75,6 +102,7 @@ function buildPass2Prompt_(studentName, studentNumber, mode, pass1Results) {
     "Use the existing Pass 1 marks and evidence notes as context.",
     "Do not change or reinterpret the awarded numeric marks.",
     "Your task is to produce final teacher-friendly and student-friendly written feedback only.",
+    `Student first name for natural feedback use: ${firstName}`,
     "",
     "Return:",
     "1. general_feedback for the whole paper",
@@ -82,31 +110,55 @@ function buildPass2Prompt_(studentName, studentNumber, mode, pass1Results) {
     "3. one worked solution for each question that needs correction",
     "",
     "General feedback rules:",
-    "1. Supportive and encouraging.",
-    "2. Maximum 2 to 3 sentences.",
-    "3. No markdown.",
+    "1. Maximum 2 to 3 sentences.",
+    "2. Begin with a genuine positive acknowledgement.",
+    "3. Use warm, encouraging, student-friendly language.",
+    "4. Use the student's first name naturally in the general feedback.",
+    "5. Preferred style: brief positive or corrective comment first, then the student's name, then the rest of the sentence.",
+    "6. Vary the wording naturally.",
+    "7. Sound like a strong, supportive teacher, not a cold marking engine.",
+    "8. Even corrective feedback should feel encouraging and constructive.",
+    "9. No markdown.",
     "",
     "Question feedback rules:",
     "1. One short sentence where possible.",
     "2. No markdown.",
     "3. Refer to the student's next step clearly and kindly.",
+    "4. Use the student's first name in some question feedback too, where it feels natural.",
+    "5. Preferred style: brief positive or corrective comment first, then the student's name, then the rest of the sentence.",
+    "6. Do not force the name into every sentence.",
+    "7. Vary the wording naturally.",
+    "8. Keep the tone warm, encouraging, student-friendly, and not robotic.",
+    "",
+    "Tone examples:",
+    `1. You've done well here, ${firstName}, keep up the good work.`,
+    `2. This is excellent work, ${firstName}, but make sure you check your working carefully.`,
+    `3. You're almost there, ${firstName}, but check the final coordinates.`,
+    `4. Nice start here, ${firstName}, but complete the final step.`,
+    `5. You made a good attempt here, ${firstName}, but now find y as well.`,
     "",
     "Worked solution rules:",
     "1. Return only mathematical working, with no explanatory sentences.",
     "2. Put each algebraic step on a new line.",
-    "3. Put one blank line between steps.",
+    "3. Put one completely blank line between steps.",
     "4. Each line must contain exactly one mathematical step only.",
-    "5. No two steps may appear on the same line.",
-    "6. Do not compress multiple equations into one long line.",
-    "7. Do not write prose such as First, Then, Therefore, So, or Because.",
-    "8. Use clean mathematical notation such as √, ×, ÷, powers, and bracketed fractions where appropriate.",
-    "9. The final answer must be on its own final line.",
-    "10. Stop when the final answer is reached.",
-    "11. If full marks were awarded for a question, working must be an empty string.",
-    "12. If no worked solution is needed, working may be an empty string.",
-    "13. Do not use bullets, markdown, or LaTeX delimiters.",
+    "5. If two different equation steps appear on one line, the output is invalid.",
+    "6. No two steps may appear on the same line.",
+    "7. Do not compress multiple equalities into one line.",
+    "8. If the student only needs a minimal correction, still return clean step-by-step working, not a compressed answer.",
+    "9. Do not write prose such as First, Then, Therefore, Because, or So.",
+    "10. Use clean mathematical notation such as √, ×, ÷, powers, and bracketed fractions where appropriate.",
+    "11. The final answer must be on its own final line.",
+    "12. Stop when the final answer is reached.",
+    "13. If full marks were awarded for a question, working must be an empty string.",
+    "14. If no worked solution is needed, working may be an empty string.",
+    "15. Do not use bullets, markdown, or LaTeX delimiters.",
     "",
-    workedSolutionExample,
+    workedSolutionExampleShort,
+    "",
+    workedSolutionExampleMedium,
+    "",
+    workedSolutionExampleSystem,
     "",
     "Questions with Pass 1 context:",
     questionLines,
@@ -169,11 +221,7 @@ function normalizePass2Working_(workingText) {
   }
 
   normalized = normalized.replace(/([^\n])\s*(Solution:)/g, "$1\n\n$2");
-  normalized = normalized.replace(/([0-9A-Za-z\)])([A-Za-z]\s*=)/g, "$1\n\n$2");
-  normalized = normalized.replace(
-    /([0-9A-Za-z\)])((?:-?\d+(?:\.\d+)?|[A-Za-z(√][^\n=]{0,40}[+\-−×÷\/][^\n=]{0,40}=))/g,
-    "$1\n\n$2"
-  );
+  normalized = normalized.replace(/\n{3,}/g, "\n\n");
 
   return normalized;
 }
