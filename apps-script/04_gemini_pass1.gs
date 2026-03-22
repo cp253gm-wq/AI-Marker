@@ -408,6 +408,30 @@ function callGeminiPass1_(modelId, prompt, studentPdfFile, answerKeyFile, questi
   return parseGeminiPass1Response_(jsonText, questions);
 }
 
+function applyCompassionateMarkFloor_(sheet, row, questions, resultMap) {
+  const existingValues = sheet
+    .getRange(row, FIRST_QUESTION_MARK_COLUMN, 1, questions.length * 3)
+    .getValues()[0];
+  const mergedResultMap = {};
+
+  for (let i = 0; i < questions.length; i++) {
+    const questionLabel = questions[i].question;
+    const newResult = resultMap[questionLabel];
+    const existingMark = existingValues[i * 3];
+    const finalMark =
+      typeof existingMark === "number" && !isNaN(existingMark)
+        ? Math.max(existingMark, newResult.mark)
+        : newResult.mark;
+
+    mergedResultMap[questionLabel] = {
+      mark: finalMark,
+      evidence_note: newResult.evidence_note
+    };
+  }
+
+  return mergedResultMap;
+}
+
 function writePass1Results_(sheet, row, mode, studentNumber, studentName, questions, resultMap) {
   const blockWidth = questions.length * 3;
   const rowValues = [];
@@ -457,7 +481,10 @@ function markStudentPass1(row, mode) {
     const studentPdfFile = findStudentPdfFile_(studentFolderLink, studentName);
     const answerKeyFile = getAnswerKeyPdfFile_(answerKeyLink);
     const prompt = buildPass1Prompt_(studentName, studentNumber, mode, questions);
-    const resultMap = callGeminiPass1_(modelId, prompt, studentPdfFile, answerKeyFile, questions);
+    const rawResultMap = callGeminiPass1_(modelId, prompt, studentPdfFile, answerKeyFile, questions);
+    const resultMap = mode === "Compassionate"
+      ? applyCompassionateMarkFloor_(sheet, row, questions, rawResultMap)
+      : rawResultMap;
 
     writePass1Results_(sheet, row, mode, studentNumber, studentName, questions, resultMap);
     clearGeminiError_();
