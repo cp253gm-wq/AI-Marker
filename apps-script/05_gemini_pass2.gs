@@ -150,6 +150,10 @@ function parseGeminiPass2Response_(responseText, pass1Results) {
     throw new Error("Gemini Pass 2 JSON is missing general_feedback.");
   }
 
+  if (!parsed.general_feedback.trim()) {
+    throw new Error("Gemini Pass 2 returned blank general_feedback.");
+  }
+
   if (!Array.isArray(parsed.questions)) {
     throw new Error("Gemini Pass 2 JSON is missing a questions array.");
   }
@@ -184,7 +188,7 @@ function parseGeminiPass2Response_(responseText, pass1Results) {
     }
 
     const feedback = item.feedback.trim();
-    const working = item.working.trim();
+    const working = String(item.working || "");
 
     if (!feedback) {
       throw new Error(`Gemini returned blank feedback for ${questionKey}.`);
@@ -334,6 +338,7 @@ function markStudentPass2(row) {
     setGeminiStatus_("Opening answer key...");
     const answerKeyFile = getAnswerKeyPdfFile_(answerKeyLink);
 
+    setGeminiStatus_("Building Pass 2 prompt...");
     const prompt = buildPass2Prompt_(studentName, studentNumber, mode, pass1Results);
     const responseText = callGeminiPass2_(modelId, prompt, studentPdfFile, answerKeyFile, questions);
     const parsedResponse = parseGeminiPass2Response_(responseText, pass1Results);
