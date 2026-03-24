@@ -3,9 +3,9 @@
  * Gemini API setup and Pass 1 marking
  *********************************/
 
-const GEMINI_API_KEY_PROPERTY = "GEMINI_API_KEY";
 const MARKING_SHEET_NAME = "Marking";
 const OVERVIEW_SHEET_NAME = "Overview";
+const GEMINI_API_KEY_CELL = "U69";
 const MARKING_STATUS_CELL = "O10";
 const GEMINI_ERROR_CELL = "G6";
 const LAST_STUDENT_MARKED_CELL = "Q8";
@@ -23,18 +23,21 @@ const FIRST_QUESTION_MARK_COLUMN = 25;
 const OVERVIEW_MARKS_RANGE = "F17:F68";
 const OVERVIEW_LABELS_RANGE = "K17:K68";
 
-function setGeminiApiKeyOnce() {
-  const apiKey = "PASTE_YOUR_API_KEY_HERE";
-  PropertiesService.getScriptProperties().setProperty(GEMINI_API_KEY_PROPERTY, apiKey);
-  SpreadsheetApp.getUi().alert("Gemini API key saved to Script Properties.");
-}
-
 function getGeminiApiKey_() {
-  const apiKey = PropertiesService.getScriptProperties().getProperty(GEMINI_API_KEY_PROPERTY);
-  if (!apiKey) {
-    throw new Error("Gemini API key not found in Script Properties.");
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const overviewSheet = ss.getSheetByName(OVERVIEW_SHEET_NAME);
+
+  if (!overviewSheet) {
+    throw new Error(`Sheet "${OVERVIEW_SHEET_NAME}" not found.`);
   }
-  return apiKey;
+
+  const sheetKey = overviewSheet.getRange(GEMINI_API_KEY_CELL).getValue().toString().trim();
+
+  if (sheetKey !== "") {
+    return sheetKey;
+  }
+
+  throw new Error(`Gemini API key not found. Please add it to Overview!${GEMINI_API_KEY_CELL}.`);
 }
 
 function setGeminiStatus_(message, minSeconds) {

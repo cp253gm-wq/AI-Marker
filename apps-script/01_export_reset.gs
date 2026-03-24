@@ -198,17 +198,20 @@ function resetWorkbookData() {
     markingSheet.getRange("C14:C43").clearContent();
     markingSheet.getRange("H14:H43").clearContent();
     markingSheet.getRange("P14:P43").clearContent();
+    markingSheet.getRange("Q8").clearContent();
     markingSheet.getRange("X14:FR43").clearContent();
 
     // Clear setup / status cells on Marking
-    markingSheet.getRange("J2").clearContent(); // Student Papers Folder
-    markingSheet.getRange("K4").clearContent(); // Answer Key File
-    markingSheet.getRange("G6").clearContent(); // Last Gemini Error
-    markingSheet.getRange("O10").clearContent(); // System Status
+    markingSheet.getRange("J2").clearContent();
+    markingSheet.getRange("K4").clearContent();
+    markingSheet.getRange("G6").clearContent();
+    markingSheet.getRange("O10").clearContent();
 
     // Restore defaults on Marking
     markingSheet.getRange("C14").setValue("Add Student Names Here...");
     markingSheet.getRange("E10").setValue("Standard");
+    markingSheet.getRange("J2").setValue("Paste a Google Drive link to your unmarked papers folder here...");
+    markingSheet.getRange("K4").setValue("Paste a Google Drive link to a PDF of your assessment's answer key here...");
   }
 
   if (overviewSheet) {
@@ -222,7 +225,7 @@ function resetWorkbookData() {
     overviewSheet.getRange("F10").clearContent();
     overviewSheet.getRange("D12").clearContent().setValue("T. Name");
     overviewSheet.getRange("E14").clearContent().setValue("G? U? KSA OR C#");
-    overviewSheet.getRange("Q8").clearContent();
+    overviewSheet.getRange("Q8").clearContent().setValue("Paste a Google Drive link to your student feedback folder here...");
 
     // Clear question setup table
     overviewSheet.getRange("B17:J68").clearContent();
